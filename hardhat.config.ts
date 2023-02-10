@@ -1,8 +1,8 @@
 import "hardhat-typechain";
 import "@nomiclabs/hardhat-waffle";
-// import "@nomiclabs/hardhat-etherscan";
+import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-ethers";
-// import "@openzeppelin/hardhat-upgrades";
+import "@openzeppelin/hardhat-upgrades";
 import "hardhat-contract-sizer";
 import * as dotenv from "dotenv";
 dotenv.config({ path: __dirname + "/.env" });
@@ -15,7 +15,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 125,
+            runs: 200,
           },
         },
       },
@@ -56,9 +56,9 @@ module.exports = {
       blockGasLimit: 10000000,
     },
     plgtest: {
-      url: "https://rpc-mumbai.maticvigil.com/v1/f2694706244b5a8fbd5944ca2e5fc67401b8ee60",
+      url: "https://polygon-mumbai.g.alchemy.com/v2/TOys_H0HFTfYDDuiwPoW1uwp0XDoOv_e",
       accounts: [process.env.PRIV_KEY],
-      gasPrice: 10000000000,
+      gasPrice: 2000000000,
       blockGasLimit: 10000000,
     },
     main: {

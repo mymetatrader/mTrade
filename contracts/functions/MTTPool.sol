@@ -1,63 +1,66 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
-import '../interfaces/TokenInterfaceV5.sol';
-import '../interfaces/LpInterfaceV5.sol';
-import '../interfaces/NftInterfaceV5.sol';
-import '../interfaces/QuickStakingContractInterfaceV5.sol';
+import "../interfaces/TokenInterfaceV5.sol";
+import "../interfaces/LpInterfaceV5.sol";
+import "../interfaces/NftInterfaceV5.sol";
+import "../interfaces/QuickStakingContractInterfaceV5.sol";
 
-contract MTTPool{
-
+contract MTTPool {
     // Constants
-    bytes32 public constant MINTER_ROLE = 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6;
-    TokenInterfaceV5 public constant quick = TokenInterfaceV5(0xf28164A485B0B2C90639E47b0f377b4a438a16B1);
+    bytes32 public constant MINTER_ROLE =
+        0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6;
+    TokenInterfaceV5 public constant quick =
+        TokenInterfaceV5(0xf28164A485B0B2C90639E47b0f377b4a438a16B1);
 
     // Contracts & Addresses
     TokenInterfaceV5 public token; // GNS
     LpInterfaceV5 public lp; // GNS/DAI
     QuickStakingContractInterfaceV5 public quickStakingContract;
-    address public govFund = 0xC66FbE50Dd33c9AAdd65707F7088D597C86fE00F;
+
+    //gov const
+    address public govFund = 0x01157439f6133Dd36e48603ec1f2087A345e62aC;
 
     // Pool variables
-    uint public accTokensPerLp;
-    uint public accQuickPerLp; // Dual rewards
-    uint public lpBalance;
+    uint256 public accTokensPerLp;
+    uint256 public accQuickPerLp; // Dual rewards
+    uint256 public lpBalance;
 
     // Pool parameters
-    uint public maxNftsStaked = 3;
-    uint public referralP = 6; // % 2 == 0
-    uint[5] public boostsP = [2, 3, 5, 8, 13];
+    uint256 public maxNftsStaked = 3;
+    uint256 public referralP = 6; // % 2 == 0
+    uint256[5] public boostsP = [2, 3, 5, 8, 13];
 
     // Pool stats
-    uint public rewardsToken; // 1e18
-    uint public rewardsQuick; // 1e18
+    uint256 public rewardsToken; // 1e18
+    uint256 public rewardsQuick; // 1e18
 
     // Mappings
     mapping(address => User) public users;
-    mapping(address => mapping(uint => StakedNft)) public userNfts;
+    mapping(address => mapping(uint256 => StakedNft)) public userNfts;
     mapping(address => bool) public allowedContracts;
 
     // Structs
-    struct StakedNft{
-        uint nftId;
-        uint nftType;
+    struct StakedNft {
+        uint256 nftId;
+        uint256 nftType;
     }
-    struct User{
-        uint provided;
-        uint debtToken;
-        uint debtQuick;
-        uint stakedNftsCount;
-        uint totalBoost;
+    struct User {
+        uint256 provided;
+        uint256 debtToken;
+        uint256 debtQuick;
+        uint256 stakedNftsCount;
+        uint256 totalBoost;
         address referral;
-        uint referralRewardsToken;
+        uint256 referralRewardsToken;
     }
 
     // Events
     event AddressUpdated(string name, address a);
     event ContractAllowed(address a, bool allowed);
-    event BoostsUpdated(uint[5]);
-    event NumberUpdated(string name, uint value);
+    event BoostsUpdated(uint256[5]);
+    event NumberUpdated(string name, uint256 value);
 
-    constructor(address _tradingStorage){
+    constructor(address _tradingStorage) {
         require(_tradingStorage != address(0), "ADDRESS_0");
         allowedContracts[_tradingStorage] = true;
     }
@@ -65,57 +68,80 @@ contract MTTPool{
     // GOV => UPDATE VARIABLES & MANAGE PAIRS
 
     // 0. Modifiers
-    modifier onlyGov(){
+    modifier onlyGov() {
         require(msg.sender == govFund, "GOV_ONLY");
         _;
     }
 
     // Set addresses
-    function setGovFund(address _gov) external onlyGov{
+    function setGovFund(address _gov) external onlyGov {
         require(_gov != address(0), "ADDRESS_0");
         govFund = _gov;
         emit AddressUpdated("govFund", _gov);
     }
-    function setToken(TokenInterfaceV5 _token) external onlyGov{
+
+    function setToken(TokenInterfaceV5 _token) external onlyGov {
         require(address(_token) != address(0), "ADDRESS_0");
         require(address(token) == address(0), "ALREADY_SET");
         token = _token;
         emit AddressUpdated("token", address(_token));
     }
-    function setLp(LpInterfaceV5 _lp) external onlyGov{
+
+    function setLp(LpInterfaceV5 _lp) external onlyGov {
         require(address(_lp) != address(0), "ADDRESS_0");
         require(address(lp) == address(0), "ALREADY_SET");
         lp = _lp;
         emit AddressUpdated("lp", address(_lp));
     }
-    function setQuickStakingContract(QuickStakingContractInterfaceV5 _quickStaking) external onlyGov{
+
+    function setQuickStakingContract(
+        QuickStakingContractInterfaceV5 _quickStaking
+    ) external onlyGov {
         require(address(_quickStaking) != address(0), "ADDRESS_0");
         require(address(quickStakingContract) == address(0), "ALREADY_SET");
         quickStakingContract = _quickStaking;
         emit AddressUpdated("quickStakingContract", address(_quickStaking));
     }
-    function addAllowedContract(address c) external onlyGov{
+
+    function addAllowedContract(address c) external onlyGov {
         require(c != address(0), "ADDRESS_0");
         require(token.hasRole(MINTER_ROLE, c), "NOT_MINTER");
         allowedContracts[c] = true;
         emit ContractAllowed(c, true);
     }
-    function removeAllowedContract(address c) external onlyGov{
+
+    function removeAllowedContract(address c) external onlyGov {
         require(c != address(0), "ADDRESS_0");
         allowedContracts[c] = false;
         emit ContractAllowed(c, false);
     }
-    function setBoostsP(uint _bronze, uint _silver, uint _gold, uint _platinum, uint _diamond) external onlyGov{
-        require(_bronze < _silver && _silver < _gold && _gold < _platinum && _platinum < _diamond && _bronze > 0, "WRONG_VALUES");
+
+    function setBoostsP(
+        uint256 _bronze,
+        uint256 _silver,
+        uint256 _gold,
+        uint256 _platinum,
+        uint256 _diamond
+    ) external onlyGov {
+        require(
+            _bronze < _silver &&
+                _silver < _gold &&
+                _gold < _platinum &&
+                _platinum < _diamond &&
+                _bronze > 0,
+            "WRONG_VALUES"
+        );
         boostsP = [_bronze, _silver, _gold, _platinum, _diamond];
         emit BoostsUpdated(boostsP);
     }
-    function setMaxNftsStaked(uint _maxNftsStaked) external onlyGov{
+
+    function setMaxNftsStaked(uint256 _maxNftsStaked) external onlyGov {
         require(_maxNftsStaked >= 3, "BELOW_3");
         maxNftsStaked = _maxNftsStaked;
         emit NumberUpdated("maxNftsStaked", _maxNftsStaked);
     }
-    function setReferralP(uint _referralP) external onlyGov{
+
+    function setReferralP(uint256 _referralP) external onlyGov {
         require(_referralP % 2 == 0, "NOT_EVEN");
         referralP = _referralP;
         emit NumberUpdated("referralP", _referralP);
@@ -124,64 +150,87 @@ contract MTTPool{
     // USEFUL FUNCTIONS
 
     // Remove access to contracts
-    modifier notContract(){
+    modifier notContract() {
         require(tx.origin == msg.sender, "CONTRACT");
         _;
     }
 
     // Get reserves LP
-    function reservesLp() public view returns(uint, uint){
+    function reservesLp() public view returns (uint256, uint256) {
         (uint112 reserves0, uint112 reserves1, ) = lp.getReserves();
-        return lp.token0() == address(token) ? (reserves0, reserves1) : (reserves1, reserves0);
+        return
+            lp.token0() == address(token)
+                ? (reserves0, reserves1)
+                : (reserves1, reserves0);
     }
 
     // Called by Gains.farm ecosystem allowed contracts (trading, casino, etc.)
-    function increaseAccTokensPerLp(uint _amount) external{
-        require(allowedContracts[msg.sender] && token.hasRole(MINTER_ROLE, msg.sender), "ONLY_ALLOWED_CONTRACTS");
-        if(lpBalance > 0){
-            accTokensPerLp += _amount * 1e18 / lpBalance;
+    function increaseAccTokensPerLp(uint256 _amount) external {
+        require(
+            allowedContracts[msg.sender] &&
+                token.hasRole(MINTER_ROLE, msg.sender),
+            "ONLY_ALLOWED_CONTRACTS"
+        );
+        if (lpBalance > 0) {
+            accTokensPerLp += (_amount * 1e18) / lpBalance;
             rewardsToken += _amount;
         }
     }
 
     // Compute NFT boosts
-    function setBoosts() private{
+    function setBoosts() private {
         User storage u = users[msg.sender];
         u.totalBoost = 0;
-        for(uint i = 0; i < u.stakedNftsCount; i++){
-            u.totalBoost += u.provided * boostsP[userNfts[msg.sender][i].nftType-1] / 100;
+        for (uint256 i = 0; i < u.stakedNftsCount; i++) {
+            u.totalBoost +=
+                (u.provided * boostsP[userNfts[msg.sender][i].nftType - 1]) /
+                100;
         }
-        u.debtToken = (u.provided + u.totalBoost) * accTokensPerLp / 1e18;
-        u.debtQuick = (u.provided + u.totalBoost) * accQuickPerLp / 1e18;
+        u.debtToken = ((u.provided + u.totalBoost) * accTokensPerLp) / 1e18;
+        u.debtQuick = ((u.provided + u.totalBoost) * accQuickPerLp) / 1e18;
     }
 
     // Rewards to be harvested
-    function pendingRewardToken() view public returns(uint){
+    function pendingRewardToken() public view returns (uint256) {
         User storage u = users[msg.sender];
-        return (u.provided + u.totalBoost) * accTokensPerLp / 1e18 - u.debtToken;
+        return
+            ((u.provided + u.totalBoost) * accTokensPerLp) / 1e18 - u.debtToken;
     }
-    function pendingRewardQuick() view public returns(uint){
-        if(lpBalance == 0){ return 0; }
+
+    function pendingRewardQuick() public view returns (uint256) {
+        if (lpBalance == 0) {
+            return 0;
+        }
         User storage u = users[msg.sender];
-        uint pendingAccQuickPerLp = accQuickPerLp + quickStakingContract.earned(address(this)) * 1e18 / lpBalance;
-        return (u.provided + u.totalBoost) * pendingAccQuickPerLp / 1e18 - u.debtQuick;
+        uint256 pendingAccQuickPerLp = accQuickPerLp +
+            (quickStakingContract.earned(address(this)) * 1e18) /
+            lpBalance;
+        return
+            ((u.provided + u.totalBoost) * pendingAccQuickPerLp) /
+            1e18 -
+            u.debtQuick;
     }
 
     // EXTERNAL FUNCTIONS
 
     // Harvest rewards
-    function harvest() public{
-        if(lpBalance == 0){ return; }
-        
+    function harvest() public {
+        if (lpBalance == 0) {
+            return;
+        }
+
         User storage u = users[msg.sender];
 
-        uint pendingTokens = pendingRewardToken();
+        uint256 pendingTokens = pendingRewardToken();
 
-        if(pendingTokens > 0){
-            if(u.referral == address(0)){
-                token.mint(msg.sender, pendingTokens - pendingTokens * referralP / 100);
-            }else{
-                uint referralReward = pendingTokens * referralP / 200;
+        if (pendingTokens > 0) {
+            if (u.referral == address(0)) {
+                token.mint(
+                    msg.sender,
+                    pendingTokens - (pendingTokens * referralP) / 100
+                );
+            } else {
+                uint256 referralReward = (pendingTokens * referralP) / 200;
 
                 token.mint(msg.sender, pendingTokens - referralReward);
                 token.mint(u.referral, referralReward);
@@ -190,24 +239,26 @@ contract MTTPool{
             }
         }
 
-        u.debtToken = (u.provided + u.totalBoost) * accTokensPerLp / 1e18;
+        u.debtToken = ((u.provided + u.totalBoost) * accTokensPerLp) / 1e18;
 
-        uint pendingQuick = pendingRewardQuick();
-        uint pendingQuickTotal = quickStakingContract.earned(address(this));
+        uint256 pendingQuick = pendingRewardQuick();
+        uint256 pendingQuickTotal = quickStakingContract.earned(address(this));
 
         quickStakingContract.getReward();
-        accQuickPerLp += pendingQuickTotal * 1e18 / lpBalance;
+        accQuickPerLp += (pendingQuickTotal * 1e18) / lpBalance;
 
-        u.debtQuick = (u.provided + u.totalBoost) * accQuickPerLp / 1e18;
+        u.debtQuick = ((u.provided + u.totalBoost) * accQuickPerLp) / 1e18;
         rewardsQuick += pendingQuickTotal;
 
-        if(pendingQuick > 0){ quick.transfer(msg.sender, pendingQuick); }
+        if (pendingQuick > 0) {
+            quick.transfer(msg.sender, pendingQuick);
+        }
     }
 
     // Stake LPs
-    function stake(uint amount, address referral) external{
+    function stake(uint256 amount, address referral) external {
         User storage u = users[msg.sender];
-        
+
         // 1. Transfer the LPs to the contract
         lp.transferFrom(msg.sender, address(this), amount);
 
@@ -215,7 +266,10 @@ contract MTTPool{
         harvest();
 
         // 3. Stake in quickswap contract
-        require(lp.approve(address(quickStakingContract), amount), "APPROVE_FAILED");
+        require(
+            lp.approve(address(quickStakingContract), amount),
+            "APPROVE_FAILED"
+        );
         quickStakingContract.stake(amount);
 
         // 4. Reset lp balance
@@ -231,14 +285,18 @@ contract MTTPool{
         lpBalance += (u.provided + u.totalBoost);
 
         // 8. Set referral
-        if(u.referral == address(0) && referral != address(0) && referral != msg.sender){
+        if (
+            u.referral == address(0) &&
+            referral != address(0) &&
+            referral != msg.sender
+        ) {
             u.referral = referral;
         }
     }
 
     // Stake NFT
     // NFT types: 1, 2, 3, 4, 5
-    function stakeNft(uint nftType, uint nftId) external notContract{
+    function stakeNft(uint256 nftType, uint256 nftId) external notContract {
         User storage u = users[msg.sender];
 
         // 0. If didn't already stake NFT + nft type is either platinum or diamond
@@ -246,8 +304,11 @@ contract MTTPool{
         require(nftType >= 1 && nftType <= 5, "WRONG_NFT_TYPE");
 
         // 1. Transfer the NFT to the contract
-        require(nfts()[nftType-1].balanceOf(msg.sender) >= 1, "NOT_NFT_OWNER");
-        nfts()[nftType-1].transferFrom(msg.sender, address(this), nftId);
+        require(
+            nfts()[nftType - 1].balanceOf(msg.sender) >= 1,
+            "NOT_NFT_OWNER"
+        );
+        nfts()[nftType - 1].transferFrom(msg.sender, address(this), nftId);
 
         // 2. Harvest pending rewards
         harvest();
@@ -259,7 +320,7 @@ contract MTTPool{
         StakedNft storage stakedNft = userNfts[msg.sender][u.stakedNftsCount];
         stakedNft.nftType = nftType;
         stakedNft.nftId = nftId;
-        u.stakedNftsCount ++;
+        u.stakedNftsCount++;
 
         // 5. Set user boosts & debt
         setBoosts();
@@ -269,7 +330,7 @@ contract MTTPool{
     }
 
     // Unstake NFT
-    function unstakeNft(uint nftIndex) external{
+    function unstakeNft(uint256 nftIndex) external {
         User storage u = users[msg.sender];
         StakedNft memory stakedNft = userNfts[msg.sender][nftIndex];
 
@@ -280,8 +341,10 @@ contract MTTPool{
         lpBalance -= (u.provided + u.totalBoost);
 
         // 3. Remove NFT from storage => replace by last one and remove last one
-        userNfts[msg.sender][nftIndex] = userNfts[msg.sender][u.stakedNftsCount-1];
-        delete userNfts[msg.sender][u.stakedNftsCount-1];
+        userNfts[msg.sender][nftIndex] = userNfts[msg.sender][
+            u.stakedNftsCount - 1
+        ];
+        delete userNfts[msg.sender][u.stakedNftsCount - 1];
         u.stakedNftsCount -= 1;
 
         // 4. Set user boosts & debt
@@ -291,11 +354,15 @@ contract MTTPool{
         lpBalance += (u.provided + u.totalBoost);
 
         // 6. Transfer the NFT to the user
-        nfts()[stakedNft.nftType-1].transferFrom(address(this), msg.sender, stakedNft.nftId);
+        nfts()[stakedNft.nftType - 1].transferFrom(
+            address(this),
+            msg.sender,
+            stakedNft.nftId
+        );
     }
 
     // Unstake LPs
-    function unstake(uint amount) external{
+    function unstake(uint256 amount) external {
         // 1. Verify he doesn't unstake more than provided
         User storage u = users[msg.sender];
         require(amount <= u.provided, "AMOUNT_TOO_BIG");
@@ -325,26 +392,32 @@ contract MTTPool{
     // READ-ONLY VIEW FUNCTIONS
 
     // 1e5 precision
-    function tvl() external view returns(uint){
-        if(lp.totalSupply() == 0){ return 0; }
+    function tvl() external view returns (uint256) {
+        if (lp.totalSupply() == 0) {
+            return 0;
+        }
 
-        (, uint reserveDai) = reservesLp();
-        uint lpPriceDai = reserveDai * 1e5 * 2 / lp.totalSupply();
+        (, uint256 reserveDai) = reservesLp();
+        uint256 lpPriceDai = (reserveDai * 1e5 * 2) / lp.totalSupply();
 
-        return quickStakingContract.balanceOf(address(this)) * lpPriceDai / 1e18;
+        return
+            (quickStakingContract.balanceOf(address(this)) * lpPriceDai) / 1e18;
     }
+
     // 1e5 precision
-    function tvlWithBoosts() external view returns(uint){
-        if(lp.totalSupply() == 0){ return 0; }
+    function tvlWithBoosts() external view returns (uint256) {
+        if (lp.totalSupply() == 0) {
+            return 0;
+        }
 
-        (, uint reserveDai) = reservesLp();
-        uint lpPriceDai = reserveDai * 1e5 * 2 / lp.totalSupply();
+        (, uint256 reserveDai) = reservesLp();
+        uint256 lpPriceDai = (reserveDai * 1e5 * 2) / lp.totalSupply();
 
-        return lpBalance * lpPriceDai / 1e18;
+        return (lpBalance * lpPriceDai) / 1e18;
     }
 
     // NFTs list
-    function nfts() public pure returns(NftInterfaceV5[5] memory){
+    function nfts() public pure returns (NftInterfaceV5[5] memory) {
         return [
             NftInterfaceV5(0xF9A4c522E327935BD1F5a338c121E14e4cc1f898),
             NftInterfaceV5(0x77cd42B925e1A82f41d852D6BE727CFc88fddBbC),
