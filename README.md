@@ -1,18 +1,36 @@
-# mTrade
+# My MetaTrader Exchange
 
-    "DaiToken": "0x3fD110EcBA51AdA76D1F08b4031b51604Bc17494",
-    "ChildChainManager": "0x6CefC48b336d0930485840A1354419D64ee154f9",
-    "ChildManagerProxy": "0x3D43a6C220612fcc71347Faff02dB02CBaE644C1",
-    "TradingStorage": "0xB7ec955d649bc6AABabF069f0a6a52DaC4744872",
-    "NftReward": "0xfb39c72CF51e84f91a7693C8302423d0E6ADdDb6",
-    "PairInfos": "0xb734CFb3Fd0a00797c5BBf0aB54eE2c32819ae08",
-    "Referal": "0x2B08af3cB2B497BBaAb629313604c7b854f8Af11",
-    "PairStorage": "0x2b6bf8dA606bFc5c5d25a22d949beA406D8365E0",
-    "PriceAggregator": "0x3CDEfa6D3dBf025ecD743E2222074Be8dc41d3cf",
-    "Pool": "0x06A0fD464EC63d953a17dcf50001f30Feca063c2",
-    "Trading": "0x61a86A5E34C4eCA0945d2aD7e81EbcC42FAd5956",
-    "Vault": "0x9D843b0A3A6fbF0956097FDb90a82c70BaC9836A",
-    "TradingCallback": "0xD88a9085Af9ee11C12833ca71291DE0FCD6857c6",
-    "MetaTradeToken": "0x301e2CdE0df139FA41E7D503d1742F842FBd1e6a",
-    "Staking": "0x0890E2BC580C06F66bDA34C929D7539bE6e5c194",
-    "MMTTokenOpenPnlFeed": "0xE54DcE92c3D0f4bE589A63B6FaDe421D225Cfeb7"
+A complete breakdown of our exchange functionality and all contract addresses, functionality and more can be found in our Gitbook
+
+# Basic Sample Hardhat Project
+This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts. If you are not familiar with hardhat, you can refer it from the link below. https://hardhat.org/tutorial
+
+# Try running some of the following tasks:
+
+        npx hardhat node
+        npx hardhat clean
+        npx hardhat compile
+        npx hardhat test
+        npx hardhat coverage
+        npx hardhat run --network network_name scripts/perpetual/network_name/deployFinalScript.js (network name can be arbitrum or arbitrum goerli)
+        npx hardhat help
+# For formatting the code, you can run it
+
+        yarn solidity-prettier
+        
+## Deployed Contracts
+        
+| Name                 | Address                                    | Explorer                                                                       |
+| -------------------- | ------------------------------------------ | ------------------------------------------------------------------------------ |
+| mUSDC                | 0x3fD110EcBA51AdA76D1F08b4031b51604Bc17494 | https://testnet.arbiscan.io/address/0x3fD110EcBA51AdA76D1F08b4031b51604Bc17494 |
+| ChildChainManager    | 0x6CefC48b336d0930485840A1354419D64ee154f9 | https://testnet.arbiscan.io/address/0x6CefC48b336d0930485840A1354419D64ee154f9 |
+| ChildManagerProxy    | 0x3D43a6C220612fcc71347Faff02dB02CBaE644C1 | https://testnet.arbiscan.io/address/0x3D43a6C220612fcc71347Faff02dB02CBaE644C1 |
+| TradingStorage       | 0xB7ec955d649bc6AABabF069f0a6a52DaC4744872 | https://testnet.arbiscan.io/address/0xB7ec955d649bc6AABabF069f0a6a52DaC4744872 |
+| ExecGPT3Bot          | 0xfb39c72CF51e84f91a7693C8302423d0E6ADdDb6 | https://testnet.arbiscan.io/address/0xfb39c72CF51e84f91a7693C8302423d0E6ADdDb6 |
+| Pair Infos           | 0xb734CFb3Fd0a00797c5BBf0aB54eE2c32819ae08 | https://testnet.arbiscan.io/address/0xb734CFb3Fd0a00797c5BBf0aB54eE2c32819ae08 |
+| Referral             | 0x2B08af3cB2B497BBaAb629313604c7b854f8Af11 | https://testnet.arbiscan.io/address/0x2B08af3cB2B497BBaAb629313604c7b854f8Af11 |
+| Vault                | 0x9D843b0A3A6fbF0956097FDb90a82c70BaC9836A | https://testnet.arbiscan.io/address/0x9D843b0A3A6fbF0956097FDb90a82c70BaC9836A |
+| Trading.             | 0x61a86A5E34C4eCA0945d2aD7e81EbcC42FAd5956 | https://testnet.arbiscan.io/address/0x61a86A5E34C4eCA0945d2aD7e81EbcC42FAd5956 | 
+| OpenPnLFeed.         | 0xE54DcE92c3D0f4bE589A63B6FaDe421D225Cfeb7 | https://testnet.arbiscan.io/address/0xE54DcE92c3D0f4bE589A63B6FaDe421D225Cfeb7 |
+
+
